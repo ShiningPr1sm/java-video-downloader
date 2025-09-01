@@ -1,0 +1,33 @@
+# Maven build output
+/target/
+/out/
+
+# IDEA project files
+*.iml
+.idea/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Compiled binaries
+*.class
+*.jar
+*.war
+*.ear
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.swp
+*.bak
+
+# Ignore ffmpeg binaries if you keep them locally
+src/main/resources/ffmpeg/bin/
+src/main/resources/yt-dlp.exe
