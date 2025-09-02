@@ -3,6 +3,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.*;
 import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -43,6 +46,11 @@ class YouTubeDownloader {
         progressBar.setStringPainted(true);
         frame.add(progressBar);
 
+        String[] formats = {"(dual) Video+Audio", "Video", "Audio"};
+        JComboBox<String> formatBox = new JComboBox<>(formats);
+        formatBox.setBounds(140, 145, 150, 25);
+        frame.add(formatBox);
+
         JButton downloadButton = new JButton("Download");
         downloadButton.setBounds(10, 145, 120, 25);
         frame.add(downloadButton);
@@ -82,17 +90,45 @@ class YouTubeDownloader {
                     ffmpegDir.mkdirs();
                     File ffmpegExe = extractResource("/ffmpeg/bin/ffmpeg.exe", tempDir);
 
-                    ProcessBuilder pb = new ProcessBuilder(
-                            ytDlpExe.getAbsolutePath(),
-                            "-f", "bestvideo+bestaudio",
-                            "--merge-output-format", "mp4",
-                            "--ffmpeg-location", ffmpegExe.getAbsolutePath(),
-                            "-o", folderToUse.getAbsolutePath() + "/%(title)s.%(ext)s",
-                            videoUrl
-                    );
+                    String selectedFormat = (String) formatBox.getSelectedItem();
 
+                    List<String> command = new ArrayList<>();
+                    command.add(ytDlpExe.getAbsolutePath());
+
+                    switch (selectedFormat) {
+                        case "(dual) Video+Audio":
+                            command.add("-f");
+                            command.add("bestvideo+bestaudio");
+                            command.add("--merge-output-format");
+                            command.add("mp4");
+                            command.add("--ffmpeg-location");
+                            command.add(ffmpegExe.getAbsolutePath());
+                            break;
+                        case "Video":
+                            command.add("-f");
+                            command.add("bestvideo");
+                            break;
+                        case "Audio":
+                            command.add("-f");
+                            command.add("bestaudio");
+                            command.add("--extract-audio");
+                            command.add("--audio-format");
+                            command.add("mp3"); // also can be used "wav"/"aac" format
+                            break;
+                        case null:
+                            break;
+                        default:
+                            throw new IllegalStateException("Unexpected value: " + selectedFormat);
+                    }
+
+                    command.add("-o");
+                    command.add(folderToUse.getAbsolutePath() + "/%(title)s.%(ext)s");
+                    command.add(videoUrl);
+
+                    ProcessBuilder pb = new ProcessBuilder(command);
                     pb.redirectErrorStream(true);
                     Process process = pb.start();
+
 
                     BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
                     String line;
@@ -135,7 +171,7 @@ class YouTubeDownloader {
         if (in == null) throw new FileNotFoundException("Resource not found: " + resourcePath);
 
         File outFile = new File(outputDir, new File(resourcePath).getName());
-        Files.copy(in, outFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+        Files.copy(in, outFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
         in.close();
         outFile.deleteOnExit();
         return outFile;
