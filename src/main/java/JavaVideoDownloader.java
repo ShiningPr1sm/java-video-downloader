@@ -98,7 +98,7 @@ class YouTubeDownloader {
                     switch (selectedFormat) {
                         case "(dual) Video+Audio":
                             command.add("-f");
-                            command.add("bestvideo+bestaudio");
+                            command.add("bestvideo[ext=mp4]+bestaudio[ext=m4a]");
                             command.add("--merge-output-format");
                             command.add("mp4");
                             command.add("--ffmpeg-location");
