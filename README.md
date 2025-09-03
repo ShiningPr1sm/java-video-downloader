@@ -26,8 +26,6 @@ git clone https://github.com/ShiningPr1sm/java-video-downloader.git
 
 ## TODO list
 
-- [x] Add YT music download support.
-  - [x] also add support to download audio or video separately.
 - [ ] Multi-threaded downloads for faster performance. (???)
 - [ ] Improve GUI design.
 
