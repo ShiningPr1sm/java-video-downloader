@@ -43,7 +43,11 @@ class YouTubeDownloader {
         progressBar.setStringPainted(true);
         frame.add(progressBar);
 
-        String[] formats = {"(dual) Video+Audio/YT music", "Video", "Audio/YT music"};
+        String[] formats = {"(dual) Video+Audio/YT music",
+                "TikTok, Instagram",
+                /*"X.com (twitter)",*/
+                "Video",
+                "Audio/YT music"};
         JComboBox<String> formatBox = new JComboBox<>(formats);
         formatBox.setBounds(140, 145, 200, 25);
         frame.add(formatBox);
@@ -121,13 +125,27 @@ class YouTubeDownloader {
                                 command.add("-f");
                                 command.add("bestvideo");
                                 break;
-                            case "Audio":
+                            case "Audio/YT music":
                                 command.add("-f");
                                 command.add("bestaudio");
                                 command.add("--extract-audio");
                                 command.add("--audio-format");
                                 command.add("mp3");
                                 break;
+                            case "TikTok, Instagram":
+                                command.add("-f");
+                                command.add("best[ext=mp4]");
+                                break;
+//                            case "X.com (twitter)":
+//                                command.add("-f");
+//                                command.add("best");
+//                                command.add("--merge-output-format");
+//                                command.add("mp4");
+//                                command.add("--remux-video");
+//                                command.add("mp4");
+//                                command.add("--ffmpeg-location");
+//                                command.add(ffmpegExe.getAbsolutePath());
+//                                break;
                             case null:
                                 break;
                             default:
