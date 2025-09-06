@@ -16,10 +16,12 @@ class YouTubeDownloader {
         frame.setSize(515, 220);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        frame.setLocation((screenSize.width - 500) / 2, (screenSize.height - 220) / 2);
+        frame.setLocation((screenSize.width - 500) / 2, (screenSize.height - 240) / 2);
         frame.setLayout(null);
+        frame.setResizable(false);
+
         try {
-            Image icon = ImageIO.read(Objects.requireNonNull(YouTubeDownloader.class.getResource("/5295-youtube-i_102568.png")));
+            Image icon = ImageIO.read(Objects.requireNonNull(YouTubeDownloader.class.getResource("/youtube_icon.png")));
             frame.setIconImage(icon);
         } catch (IOException e) {
             e.printStackTrace();
@@ -31,7 +33,7 @@ class YouTubeDownloader {
 
         JTextArea textArea = new JTextArea();
         JScrollPane scrollPane = new JScrollPane(textArea);
-        scrollPane.setBounds(10, 40, 480, 60);
+        scrollPane.setBounds(10, 50, 480, 60);
         frame.add(scrollPane);
 
         JButton folderButton = new JButton("Select Folder");
@@ -43,6 +45,15 @@ class YouTubeDownloader {
         progressBar.setStringPainted(true);
         frame.add(progressBar);
 
+        ImageIcon icon = new ImageIcon(Objects.requireNonNull(YouTubeDownloader.class.getResource("/thumbnail_icon.png")));
+        Image scaled = icon.getImage().getScaledInstance(24, 24, Image.SCALE_SMOOTH);
+
+        JButton thumbnailButton = new JButton();
+        thumbnailButton.setIcon(new ImageIcon(scaled));
+        thumbnailButton.setBounds(515 - 56, 10, 30, 30);
+        thumbnailButton.setToolTipText("Download thumbnail");
+
+        frame.add(thumbnailButton);
         String[] formats = {"(dual) Video+Audio/YT music",
                 "TikTok, Instagram",
                 /*"X.com (twitter)",*/
@@ -198,6 +209,74 @@ class YouTubeDownloader {
                 }
             }).start();
         });
+
+        thumbnailButton.addActionListener(_ -> {
+            String[] urls = textArea.getText().split("\\r?\\n");
+            List<String> links = new ArrayList<>();
+            for (String u : urls) {
+                if (!u.trim().isEmpty()) {
+                    links.add(u.trim());
+                }
+            }
+
+            if (links.isEmpty()) {
+                JOptionPane.showMessageDialog(frame, "Please enter at least one video URL!");
+                return;
+            }
+
+            thumbnailButton.setEnabled(false);
+            progressBar.setValue(0);
+            progressBar.setString("Downloading thumbnails...");
+
+            File folderToUse = downloadFolder[0];
+
+            new Thread(() -> {
+                try {
+                    File tempDir = new File(System.getProperty("java.io.tmpdir"), "ytDownloader");
+                    tempDir.mkdirs();
+
+                    File ytDlpExe = extractResource("/yt-dlp.exe", tempDir);
+
+                    int done = 0;
+                    for (String videoUrl : links) {
+                        List<String> command = new ArrayList<>();
+                        command.add(ytDlpExe.getAbsolutePath());
+                        command.add("--write-thumbnail");
+                        command.add("--convert-thumbnails");
+                        command.add("png");
+                        command.add("-o");
+                        command.add(folderToUse.getAbsolutePath() + "/%(title)s.%(ext)s");
+                        command.add(videoUrl);
+
+                        ProcessBuilder pb = new ProcessBuilder(command);
+                        pb.redirectErrorStream(true);
+                        Process process = pb.start();
+                        process.waitFor();
+
+                        done++;
+                        int progress = (int) (((double) done / links.size()) * 100);
+                        int finalDone = done;
+                        SwingUtilities.invokeLater(() -> {
+                            progressBar.setValue(progress);
+                            progressBar.setString("Downloaded " + finalDone + "/" + links.size() + " thumbnails");
+                        });
+                    }
+
+                    SwingUtilities.invokeLater(() -> {
+                        progressBar.setValue(100);
+                        progressBar.setString("All thumbnails downloaded!");
+                        thumbnailButton.setEnabled(true);
+                    });
+
+                } catch (IOException | InterruptedException ex) {
+                    SwingUtilities.invokeLater(() -> {
+                        progressBar.setString("Error: " + ex.getMessage());
+                        thumbnailButton.setEnabled(true);
+                    });
+                }
+            }).start();
+        });
+
 
         frame.setVisible(true);
     }
