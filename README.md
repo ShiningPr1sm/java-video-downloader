@@ -24,10 +24,5 @@ git clone https://github.com/ShiningPr1sm/java-video-downloader.git
 - ffmpeg (for merging audio and video) ((deleted from res folder, bc of 150+MB size of file))
 - Maven (for project build)
 
-## TODO list
-
-- [ ] Multi-threaded downloads for faster performance. (???)
-- [ ] Improve GUI design.
-
 ## Contributing
 Contributions are welcome! Feel free to submit issues or pull requests.
