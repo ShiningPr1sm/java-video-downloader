@@ -220,12 +220,9 @@ class YouTubeDownloader {
 
     private static void checkAndDownloadFFMPEG() throws IOException {
         if (!FFMPEG_DIR.exists()) FFMPEG_DIR.mkdirs();
-
-        // Очистим старые распакованные папки, чтобы не оставалось мусора
         cleanupOldFfmpegExtracts();
 
         if (FFMPEG_EXE.exists()) {
-            // уже есть - в порядке
             return;
         }
 
@@ -237,16 +234,12 @@ class YouTubeDownloader {
             in.transferTo(out);
         }
 
-        // Попытка извлечь только ffmpeg.exe из архива
         extractFfmpegFromZip(zipFile, FFMPEG_EXE);
-
-        // удаляем zip (не нужен)
         zipFile.delete();
 
         if (!FFMPEG_EXE.exists()) {
             throw new IOException("Не найден ffmpeg.exe внутри архива.");
         }
-        // делаем исполняемым
         FFMPEG_EXE.setExecutable(true, false);
 
         System.out.println("ffmpeg installed to: " + FFMPEG_EXE.getAbsolutePath());
@@ -257,7 +250,6 @@ class YouTubeDownloader {
             Enumeration<? extends ZipEntry> entries = zf.entries();
             ZipEntry candidate = null;
 
-            // Сначала попробуем найти наиболее корректный путь: */bin/ffmpeg.exe
             while (entries.hasMoreElements()) {
                 ZipEntry e = entries.nextElement();
                 String name = e.getName().replace('\\','/').toLowerCase();
@@ -267,7 +259,6 @@ class YouTubeDownloader {
                 }
             }
 
-            // Если не нашли /bin/ffmpeg.exe, пройдёмся ещё раз и найдём любой ffmpeg.exe
             if (candidate == null) {
                 Enumeration<? extends ZipEntry> entries2 = zf.entries();
                 while (entries2.hasMoreElements()) {
@@ -284,7 +275,6 @@ class YouTubeDownloader {
                 throw new IOException("В архиве не найден ffmpeg.exe");
             }
 
-            // Запишем только этот файл в целевую папку (перепишем, если был)
             try (InputStream is = zf.getInputStream(candidate);
                  FileOutputStream fos = new FileOutputStream(outFile)) {
                 byte[] buffer = new byte[8192];
@@ -294,18 +284,15 @@ class YouTubeDownloader {
         }
     }
 
-    // Удаляем старые подпапки/файлы, которые могли появиться от некорректной распаковки
     private static void cleanupOldFfmpegExtracts() {
         File dir = FFMPEG_DIR;
         if (!dir.exists()) return;
         File[] files = dir.listFiles();
         if (files == null) return;
         for (File f : files) {
-            // Оставляем только ffmpeg.exe и ffmpeg.zip (zip будет перезаписан)
             if (f.getName().equalsIgnoreCase("ffmpeg.exe") || f.getName().equalsIgnoreCase("ffmpeg.zip")) {
                 continue;
             }
-            // рекурсивно удаляем всё остальное (без ошибки, если не удалось)
             deleteRecursivelyQuiet(f);
         }
     }
