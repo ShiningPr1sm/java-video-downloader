@@ -19,9 +19,8 @@ git clone https://github.com/ShiningPr1sm/java-video-downloader.git
 
 ## Technologies Used
 
-- Java 17+
-- yt-dl ((deleted from res folder, bc of 150+MB size of file))
-- ffmpeg (for merging audio and video) ((deleted from res folder, bc of 150+MB size of file))
+- Java 17+;
+- yt-dlp & ffmpeg. They not included in program, download separately;
 - Maven (for project build)
 
 ## Contributing
