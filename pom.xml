@@ -7,7 +7,7 @@
 
     <groupId>org.example</groupId>
     <artifactId>JavaVideoDWN</artifactId>
-    <version>2.1.0.0-release</version>
+    <version>2.1.0.1-release</version>
 
     <build>
         <plugins>
