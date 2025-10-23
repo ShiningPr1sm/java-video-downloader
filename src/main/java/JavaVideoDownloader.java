@@ -169,6 +169,8 @@ class YouTubeDownloader {
                                 command.add("best[ext=mp4]");
                                 break;
                         }
+                        command.add("--impersonate");
+                        command.add("chrome");
 
                         command.add("-o");
                         command.add(downloadFolder[0].getAbsolutePath() + "/%(title)s.%(ext)s");
@@ -208,14 +210,54 @@ class YouTubeDownloader {
 
     private static void checkAndDownloadYTDLP() throws IOException {
         if (!YTDLP_DIR.exists()) YTDLP_DIR.mkdirs();
-        if (!YTDLP_EXE.exists()) {
-            System.out.println("yt-dlp not found, downloading latest version...");
+
+        boolean needsUpdate = true;
+
+        if (YTDLP_EXE.exists()) {
+            try {
+                Process process = new ProcessBuilder(YTDLP_EXE.getAbsolutePath(), "--version").start();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+                String currentVersion = reader.readLine();
+                process.waitFor();
+
+                String latestVersion = getLatestYtDlpVersion();
+                if (latestVersion != null && currentVersion != null && currentVersion.equals(latestVersion)) {
+                    System.out.println("yt-dlp is up to date (" + currentVersion + ")");
+                    needsUpdate = false;
+                } else {
+                    System.out.println("yt-dlp update required: current=" + currentVersion + ", latest=" + latestVersion);
+                }
+            } catch (Exception e) {
+                System.out.println("Failed to check yt-dlp version, forcing re-download...");
+            }
+        }
+
+        if (needsUpdate) {
+            System.out.println("Downloading latest yt-dlp...");
             try (InputStream in = new URL(YTDLP_URL).openStream();
                  FileOutputStream out = new FileOutputStream(YTDLP_EXE)) {
                 in.transferTo(out);
             }
             YTDLP_EXE.setExecutable(true);
+            System.out.println("yt-dlp updated successfully.");
         }
+    }
+
+    private static String getLatestYtDlpVersion() {
+        try (InputStream in = new URL("https://api.github.com/repos/yt-dlp/yt-dlp/releases/latest").openStream();
+             BufferedReader reader = new BufferedReader(new InputStreamReader(in))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (line.trim().startsWith("\"tag_name\"")) {
+                    // Example: "tag_name": "2024.10.07",
+                    String version = line.split(":")[1].replaceAll("[\", ]", "");
+                    return version;
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("Could not fetch latest yt-dlp version: " + e.getMessage());
+        }
+        return null;
     }
 
     private static void checkAndDownloadFFMPEG() throws IOException {
